@@ -4,18 +4,38 @@ import 'package:todo_list/Models/notes_operation.dart';
 import 'package:todo_list/Models/note.dart';
 import 'package:todo_list/Helpers/DatabaseHelper.dart';
 
-class AddScreen extends StatelessWidget {
-  const AddScreen({Key? key});
+class EditScreen extends StatefulWidget {
+  final Note note;
+  const EditScreen({Key? key, required this.note});
+
+  @override
+  _EditScreenState createState() => _EditScreenState();
+}
+
+class _EditScreenState extends State<EditScreen> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.note.title);
+    _descriptionController = TextEditingController(text: widget.note.description);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    late String titleText;
-    late String descriptionText;
-
     return Scaffold(
       backgroundColor: Colors.blueGrey,
       appBar: AppBar(
-        title: const Text('Todo List'),
+        title: const Text('Edit Note'),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -30,6 +50,7 @@ class AddScreen extends StatelessWidget {
         child: Column(
           children: [
             TextField(
+              controller: _titleController,
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 hintText: 'Title',
@@ -44,12 +65,10 @@ class AddScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
-              onChanged: (value) {
-                titleText = value;
-              },
             ),
             Expanded(
               child: TextField(
+                controller: _descriptionController,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: 'Enter Description',
@@ -62,18 +81,18 @@ class AddScreen extends StatelessWidget {
                   fontSize: 18,
                   color: Colors.white,
                 ),
-                onChanged: (value) {
-                  descriptionText = value;
-                },
               ),
             ),
             TextButton(
               onPressed: () async {
-                Note note = Note(
-                  title: titleText,
-                  description: descriptionText,
+                String updatedTitle = _titleController.text;
+                String updatedDescription = _descriptionController.text;
+                Note updatedNote = Note(
+                  id: widget.note.id,
+                  title: updatedTitle,
+                  description: updatedDescription,
                 );
-                await DatabaseHelper.instance.insert(note);
+                await DatabaseHelper.instance.update(updatedNote);
                 Provider.of<NotesOperation>(context, listen: false)
                     .getNotesFromDatabase();
                 Navigator.pop(context);
@@ -83,7 +102,7 @@ class AddScreen extends StatelessWidget {
                     const EdgeInsets.only(left: 30, right: 30, top: 10, bottom: 10),
                 backgroundColor: Colors.white,
               ),
-              child: const Text('Add Note',
+              child: const Text('Update Note',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
